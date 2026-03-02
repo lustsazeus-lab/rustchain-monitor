@@ -62,6 +62,27 @@ python3 rustchain_monitor.py --node https://custom-node.com --miner your-id --wa
 🎉 NEW EPOCH! Earned: 0.382150 RTC
 ```
 
+
+### Example Output (Network Summary)
+
+```
+$ python3 rustchain_monitor.py
+
+RustChain Network Summary
+=========================
+Epoch:           142
+Epoch Progress:  63%
+Active Miners:   287
+Online Nodes:    12/12
+Base Reward:     1.5 RTC
+
+Top Hardware Distribution
+- PowerPC G4:    96 miners
+- PowerPC G5:    73 miners
+- IBM POWER8:    41 miners
+- Others:        77 miners
+```
+
 ## About RustChain
 
 RustChain is a blockchain that rewards vintage hardware miners using Proof-of-Antiquity consensus. Instead of rewarding the fastest hardware (like Bitcoin), we reward the *oldest* genuine hardware.
