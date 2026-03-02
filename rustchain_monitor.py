@@ -20,14 +20,66 @@ import requests
 import time
 import argparse
 import json
+import os
+import sys
 from datetime import datetime
 from typing import Dict, List, Optional
 
+
+# ANSI color codes
+class Colors:
+    """ANSI color codes for terminal output"""
+    GREEN = '\033[92m'
+    RED = '\033[91m'
+    YELLOW = '\033[93m'
+    BLUE = '\033[94m'
+    BOLD = '\033[1m'
+    END = '\033[0m'
+    
+    # Check if terminal supports colors
+    @staticmethod
+    def supports_color():
+        """Check if terminal supports ANSI colors"""
+        if os.environ.get('NO_COLOR'):
+            return False
+        # Check if stdout is a TTY or if we're forcing color
+        if '--color' in sys.argv or '--color=always' in sys.argv:
+            return True
+        return sys.stdout.isatty()
+
+
 class RustChainMonitor:
-    def __init__(self, node_url: str = "https://50.28.86.131"):
+    def __init__(self, node_url: str = "https://50.28.86.131", use_color: bool = True):
         self.node_url = node_url.rstrip('/')
         self.session = requests.Session()
         self.session.verify = False  # For self-signed certs
+        self.use_color = use_color and Colors.supports_color()
+    
+    def _color_text(self, text: str, color: str) -> str:
+        """Apply color to text if colors are enabled"""
+        if self.use_color:
+            return f"{color}{text}{Colors.END}"
+        return text
+    
+    def _status_online(self) -> str:
+        """Return online status with color"""
+        return self._color_text("✅ Online", Colors.GREEN)
+    
+    def _status_offline(self) -> str:
+        """Return offline status with color"""
+        return self._color_text("❌ Offline", Colors.RED)
+    
+    def _status_warning(self) -> str:
+        """Return warning status with color"""
+        return self._color_text("⚠️  Warning", Colors.YELLOW)
+    
+    def _status_active(self) -> str:
+        """Return active status with color"""
+        return self._color_text("✅ Active", Colors.GREEN)
+    
+    def _status_inactive(self) -> str:
+        """Return inactive status with color"""
+        return self._color_text("⚠️  Inactive", Colors.YELLOW)
         
     def get_health(self) -> Dict:
         """Check node health"""
@@ -108,11 +160,14 @@ class RustChainMonitor:
                     last_attest = our_miner.get("last_attestation_time", 0)
                     expected = self.calculate_expected_reward(arch)
                     
+                    is_active = time.time() - last_attest < 3600
+                    status = self._status_active() if is_active else self._status_inactive()
+                    
                     print(f"║  Hardware: {arch:<43}  ║")
                     print(f"║  Expected: ~{expected:.6f} RTC/epoch{' ' * 19}  ║")
-                    print(f"║  Status:   {'✅ Active' if time.time() - last_attest < 3600 else '⚠️  Inactive':<43}  ║")
+                    print(f"║  Status:   {status:<43}  ║")
                 else:
-                    print(f"║  Status:   ⚠️  Not found in active miners{' ' * 13}  ║")
+                    print(f"║  Status:   {self._status_warning() + ' Not found in active miners' + ' ' * 8:<43}  ║")
                 
                 print(f"╚═══════════════════════════════════════════════════════╝")
                 
@@ -139,10 +194,14 @@ class RustChainMonitor:
         epoch = self.get_epoch()
         miners = self.get_miners()
         
+        # Determine status color
+        is_healthy = health.get('ok', False)
+        status = self._status_online() if is_healthy else self._status_offline()
+        
         print("╔════════════════════════════════════════╗")
         print("║      RustChain Network Summary         ║")
         print("╠════════════════════════════════════════╣")
-        print(f"║  Node:    {health.get('ok', False) and '✅ Healthy' or '❌ Down'}               ║")
+        print(f"║  Node:    {status:<35} ║")
         print(f"║  Epoch:   {epoch.get('current_epoch', 'N/A'):<30} ║")
         print(f"║  Miners:  {len(miners)} active{' ' * 20} ║")
         print("╚════════════════════════════════════════╝\n")
@@ -163,10 +222,17 @@ def main():
     parser.add_argument("--miner", help="Miner ID to watch")
     parser.add_argument("--watch", action="store_true", help="Watch mode (live updates)")
     parser.add_argument("--interval", type=int, default=60, help="Update interval (seconds)")
+    parser.add_argument("--color", "--colour", dest="color", action="store_true", default=None, 
+                        help="Force color output (default: auto-detect)")
+    parser.add_argument("--no-color", dest="color", action="store_false",
+                        help="Disable color output")
     
     args = parser.parse_args()
     
-    monitor = RustChainMonitor(args.node)
+    # Handle color argument
+    use_color = args.color if args.color is not None else True
+    
+    monitor = RustChainMonitor(args.node, use_color=use_color)
     
     if args.miner and args.watch:
         monitor.watch_miner(args.miner, args.interval)
