@@ -20,8 +20,45 @@ import requests
 import time
 import argparse
 import json
+import os
+import sys
 from datetime import datetime
 from typing import Dict, List, Optional
+
+# ANSI color codes
+class Colors:
+    GREEN = '\033[92m'
+    RED = '\033[91m'
+    YELLOW = '\033[93m'
+    BLUE = '\033[94m'
+    RESET = '\033[0m'
+    BOLD = '\033[1m'
+
+# Check if terminal supports colors
+USE_COLORS = sys.stdout.isatty() and not os.environ.get('NO_COLOR')
+
+
+def colorize(text: str, color: str) -> str:
+    """Add color to text if terminal supports it."""
+    if USE_COLORS:
+        return f"{color}{text}{Colors.RESET}"
+    return text
+
+
+def green(text: str) -> str:
+    return colorize(text, Colors.GREEN)
+
+
+def red(text: str) -> str:
+    return colorize(text, Colors.RED)
+
+
+def yellow(text: str) -> str:
+    return colorize(text, Colors.YELLOW)
+
+
+def blue(text: str) -> str:
+    return colorize(text, Colors.BLUE)
 
 class RustChainMonitor:
     def __init__(self, node_url: str = "https://50.28.86.131"):
@@ -110,9 +147,13 @@ class RustChainMonitor:
                     
                     print(f"║  Hardware: {arch:<43}  ║")
                     print(f"║  Expected: ~{expected:.6f} RTC/epoch{' ' * 19}  ║")
-                    print(f"║  Status:   {'✅ Active' if time.time() - last_attest < 3600 else '⚠️  Inactive':<43}  ║")
+                    # Color-coded status: green=active, yellow=inactive
+                    is_active = time.time() - last_attest < 3600
+                    status_text = green("Active") if is_active else yellow("Inactive")
+                    status_emoji = "✅" if is_active else "⚠️"
+                    print(f"║  Status:   {status_emoji} {status_text:<40}  ║")
                 else:
-                    print(f"║  Status:   ⚠️  Not found in active miners{' ' * 13}  ║")
+                    print(f"║  Status:   {red('Not found in active miners'):<43}  ║")
                 
                 print(f"╚═══════════════════════════════════════════════════════╝")
                 
