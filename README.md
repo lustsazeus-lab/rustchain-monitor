@@ -126,3 +126,56 @@ curl -sS "https://YOUR-NODE/epoch"
 - `Connection refused` or timeout → check node URL, firewall, and HTTPS/TLS settings
 - Empty miner data → confirm `miner_id` spelling and that the miner has attested at least once
 - Watch mode looks frozen → increase `--interval` and test one-shot mode first
+
+## Sample Screenshots
+
+### Miner Dashboard
+The miner dashboard shows real-time status of your RustChain miner:
+
+![Miner Dashboard](https://example.com/images/rustchain-monitor-miner.png)
+
+```
+┌─────────────────────────────────────────────────────────┐
+│  RustChain Miner Monitor                                │
+│  ════════════════════════════════════════════════════ │
+│  Miner ID: dual-g4-125                    [Active] ✅ │
+│  ─────────────────────────────────────────────────────  │
+│  Balance:     12.450000 RTC                           │
+│  Current Epoch: 142                                    │
+│  ─────────────────────────────────────────────────────  │
+│  Hardware:    PowerPC G4 (2.5x multiplier)            │
+│  Expected:    ~0.375000 RTC/epoch                     │
+│  ─────────────────────────────────────────────────────  │
+│  Last Reward: 0.382150 RTC                             │
+└─────────────────────────────────────────────────────────┘
+```
+
+### Network Overview
+Monitor the entire RustChain network health:
+
+![Network Status](https://example.com/images/rustchain-monitor-network.png)
+
+### Watch Mode
+Live monitoring with epoch notifications:
+
+![Watch Mode](https://example.com/images/rustchain-monitor-watch.png)
+
+```
+[18:30:00] 🔄 Connecting to RustChain node...
+[18:30:01] ✅ Connected! Fetching miner data...
+[18:30:01] ═════════════════════════════════════════════
+[18:30:01] Miner: dual-g4-125 | Status: Active
+[18:30:01] Balance: 12.450000 RTC | Epoch: 142
+[18:30:01] Hardware: PowerPC G4 (2.5x multiplier)
+[18:30:01] Expected: ~0.375 RTC/epoch
+[18:30:01] ═════════════════════════════════════════════
+[18:30:01] 👀 Watching for new epochs... (Press Ctrl+C to stop)
+[18:40:12] 🎉 NEW EPOCH SETTLED!
+[18:40:12]    Earned: 0.382150 RTC
+[18:40:12]    Total: 12.832150 RTC
+[18:40:12]    Multiplier: 0.382150 × 2.5 (G4) = 0.955375 RTC
+```
+
+---
+
+*More example outputs and screenshots coming soon!*
